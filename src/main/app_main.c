@@ -1,29 +1,15 @@
 #include "esp_wifi.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "sniffer.h"
+
+void scli_init();
 
 static const char *TAG = "example";
 
 const wifi_promiscuous_filter_t filt={ //Idk what this does
     .filter_mask=WIFI_PROMIS_FILTER_MASK_MGMT|WIFI_PROMIS_FILTER_MASK_DATA
 };
-
-typedef struct { // or this
-  uint8_t mac[6];
-} __attribute__((packed)) MacAddr;
-
-typedef struct { // still dont know much about this
-  int16_t fctl;
-  int16_t duration;
-  MacAddr da;
-  MacAddr sa;
-  MacAddr bssid;
-  int16_t seqctl;
-  unsigned char payload[];
-} __attribute__((packed)) WifiMgmtHdr;
-
-
-#define maxCh 13 //max Channel -> US = 11, EU = 13, Japan = 14
 
 
 int curChannel = 1;
@@ -77,15 +63,19 @@ static void initialize_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_set_channel(curChannel, WIFI_SECOND_CHAN_NONE));
 }
 
+int load_from_nvs();
+
 void app_main(void)
 {
     initialize_nvs();
+
+    load_from_nvs();
 
     /* Initialize WiFi */
     initialize_wifi();
 
     printf("Ready to go!\n");
-
+    scli_init();
 }
 
 
