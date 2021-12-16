@@ -64,6 +64,8 @@ static void initialize_wifi(void)
 }
 
 int load_from_nvs();
+void display_init();
+void display(uint8_t level, uint8_t brightness);
 
 void app_main(void)
 {
@@ -76,6 +78,40 @@ void app_main(void)
 
     printf("Ready to go!\n");
     scli_init();
+
+    display_init();
+
+    const TickType_t xDelay = 10 / portTICK_PERIOD_MS;
+    uint64_t last_disp = 0;
+    while(1)
+    {
+//    last_rssi = p->rx_ctrl.rssi;
+//    last_time = esp_timer_get_time();
+      uint64_t now = esp_timer_get_time();
+      uint64_t elapsed = now - last_time;
+      uint8_t brightness = 0;
+      if (elapsed > 1000000)
+          brightness = 0;
+      else
+          brightness = 255.0 * (1.0-elapsed / 1000000.0);
+
+      // level 0-100 -> rssi -80 - -20
+      uint8_t level;
+      if (last_rssi < -80) level = 0;
+      else level = (last_rssi - (-80.0))*100.0/(-20.0 - (-80.0));
+      if (level > 100) level = 100;
+
+      display(level, brightness);
+
+/*
+      if (now - last_disp > 500000)
+      {
+          printf("rssi: %i, level: %i, brightness: %i\n", last_rssi, level, brightness);
+          last_disp = now;
+      }
+*/
+      vTaskDelay(xDelay);
+    }
 }
 
 
